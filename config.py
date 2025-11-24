@@ -8,8 +8,9 @@ from typing import Dict, List
 from pathlib import Path
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file if it exists
+# In Codespaces, GitHub Secrets are automatically available as env vars
+load_dotenv(override=False)  # Don't override existing env vars (e.g., from GitHub Secrets)
 
 
 class Config:

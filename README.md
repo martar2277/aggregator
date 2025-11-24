@@ -41,7 +41,37 @@ news-aggregator/
 - Python 3.8 or higher
 - Anthropic API key (get one at https://console.anthropic.com/)
 
-### Setup
+### Option 1: GitHub Codespaces (Recommended)
+
+GitHub Codespaces provides a cloud development environment with zero setup:
+
+1. **Set up API key as GitHub Secret:**
+   - Go to https://github.com/settings/codespaces
+   - Under "Codespaces secrets", click **"New secret"**
+   - Name: `ANTHROPIC_API_KEY`
+   - Value: `sk-ant-api03-your-key-here`
+   - Repository access: Select your `aggregator` repository
+
+2. **Create Codespace:**
+   - Go to your repository on GitHub
+   - Click green **"Code"** button → **"Codespaces"** → **"Create codespace on master"**
+   - Wait ~30 seconds for environment to start
+
+3. **Install dependencies in Codespace terminal:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Test the installation:**
+   ```bash
+   python main.py test
+   ```
+
+**Note:** Your API key is automatically available in Codespaces from GitHub Secrets. No `.env` file needed!
+
+### Option 2: Local Installation
+
+If you prefer to run locally:
 
 1. **Clone or download the repository**
 
