@@ -20,6 +20,10 @@ class RSSFetcher(Fetcher):
         super().__init__(**kwargs)
         self.max_articles = max_articles
 
+    def execute(self, data):
+        """Execute method required by Component base class"""
+        return self.fetch(data)
+
     def fetch(self, source: str) -> List[Dict]:
         """
         Fetch articles from an RSS feed

@@ -21,6 +21,12 @@ class MarkdownOutput(Output):
         self.output_dir = Path(output_dir or os.getenv("DEFAULT_OUTPUT_DIR", "outputs"))
         self.output_dir.mkdir(exist_ok=True)
 
+    def execute(self, data):
+        """Execute method required by Component base class"""
+        if isinstance(data, tuple):
+            return self.generate(*data)
+        return self.generate(data)
+
     def generate(self, synthesis: str, metadata: Optional[Dict] = None) -> str:
         """
         Generate a Markdown file with the synthesis

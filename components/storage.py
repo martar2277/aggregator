@@ -28,6 +28,10 @@ class JSONStorage(Storage):
         self.raw_dir.mkdir(exist_ok=True)
         self.syntheses_dir.mkdir(exist_ok=True)
 
+    def execute(self, data):
+        """Execute method required by Component base class"""
+        return self.save(data)
+
     def save(self, data: Any, metadata: Optional[Dict] = None) -> str:
         """
         Save data to JSON files
