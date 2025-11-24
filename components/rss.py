@@ -16,9 +16,10 @@ class RSSFetcher(Fetcher):
     Handles various RSS formats and provides robust error handling
     """
 
-    def __init__(self, max_articles: int = 10, **kwargs):
+    def __init__(self, max_articles: int = 10, topic_filter: str = None, **kwargs):
         super().__init__(**kwargs)
         self.max_articles = max_articles
+        self.topic_filter = topic_filter
 
     def execute(self, data):
         """Execute method required by Component base class"""
@@ -56,15 +57,23 @@ class RSSFetcher(Fetcher):
             if not feed.entries:
                 raise FetchError(source, "No entries found in RSS feed")
 
-            # Extract articles
+            # Extract and filter articles
             articles = []
-            for entry in feed.entries[:self.max_articles]:
+            for entry in feed.entries:  # Check all entries, not just max_articles
                 article = self._parse_entry(entry, source)
                 if article:
+                    # Apply topic filter if specified
+                    if self.topic_filter and not self._matches_topic(article):
+                        continue
                     articles.append(article)
+                    if len(articles) >= self.max_articles:
+                        break
 
             if not articles:
-                raise FetchError(source, "No valid articles could be extracted")
+                if self.topic_filter:
+                    raise FetchError(source, f"No articles found matching topic: {self.topic_filter}")
+                else:
+                    raise FetchError(source, "No valid articles could be extracted")
 
             if self.logger:
                 self.logger.log_fetch_success(source, len(articles), start_time)
@@ -155,6 +164,31 @@ class RSSFetcher(Fetcher):
         if hasattr(entry, 'tags'):
             tags.extend([t.get('term', '') for t in entry.tags if t.get('term')])
         return tags
+
+    def _matches_topic(self, article: Dict) -> bool:
+        """
+        Check if article matches the topic filter using keyword matching
+
+        Args:
+            article: Article dictionary
+
+        Returns:
+            True if article is relevant to topic
+        """
+        if not self.topic_filter:
+            return True
+
+        # Extract searchable text
+        searchable = f"{article.get('title', '')} {article.get('summary', '')}".lower()
+
+        # Split topic into keywords (simple approach)
+        keywords = self.topic_filter.lower().split()
+
+        # Article matches if it contains at least 50% of keywords
+        matches = sum(1 for keyword in keywords if keyword in searchable)
+        threshold = max(1, len(keywords) // 2)  # At least 50% of keywords
+
+        return matches >= threshold
 
     def _extract_source_name(self, url: str) -> str:
         """Extract a readable source name from URL"""

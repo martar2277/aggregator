@@ -64,7 +64,7 @@ def get_llm_processor(provider: str, logger: Logger) -> Processor:
     return processor_class(model=model, logger=logger)
 
 
-def create_pipeline(logger: Optional[Logger] = None, provider: Optional[str] = None) -> Pipeline:
+def create_pipeline(logger: Optional[Logger] = None, provider: Optional[str] = None, topic: Optional[str] = None) -> Pipeline:
     """
     Create and configure the pipeline with all components
     Uses multi-LLM fallback logic
@@ -72,6 +72,7 @@ def create_pipeline(logger: Optional[Logger] = None, provider: Optional[str] = N
     Args:
         logger: Optional logger instance
         provider: Optional LLM provider override
+        topic: Optional topic filter for fetcher
 
     Returns:
         Configured Pipeline
@@ -113,7 +114,7 @@ def create_pipeline(logger: Optional[Logger] = None, provider: Optional[str] = N
             raise ConfigError("LLM_PROVIDER", "No working LLM provider found")
 
     pipeline = Pipeline(logger=logger)
-    pipeline.set_fetcher(RSSFetcher(max_articles=Config.MAX_ARTICLES_PER_SOURCE, logger=logger)) \
+    pipeline.set_fetcher(RSSFetcher(max_articles=Config.MAX_ARTICLES_PER_SOURCE, topic_filter=topic, logger=logger)) \
             .set_processor(processor) \
             .set_storage(JSONStorage(storage_dir=Config.DATA_DIR, logger=logger)) \
             .set_output(MarkdownOutput(output_dir=Config.OUTPUT_DIR, logger=logger))
@@ -165,7 +166,7 @@ def analyze(
 
     # Create logger and pipeline
     logger = Logger(enable_console=verbose)
-    pipeline = create_pipeline(logger)
+    pipeline = create_pipeline(logger, topic=topic)
 
     # Remove components if requested
     if no_storage:
@@ -330,7 +331,7 @@ def test():
 
     try:
         logger = Logger(enable_console=True)
-        pipeline = create_pipeline(logger)
+        pipeline = create_pipeline(logger, topic="TEST")
         results = pipeline.run([test_source], topic="TEST")
 
         if results['success'] and results['articles_processed'] > 0:
