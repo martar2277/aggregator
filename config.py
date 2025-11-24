@@ -21,11 +21,23 @@ class Config:
 
     # API Keys
     ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # For future use
+    OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
     # LLM Settings
-    DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "claude-3-haiku-20240307")
+    # DEFAULT_LLM_PROVIDER options: "openai", "gemini", "anthropic"
+    DEFAULT_LLM_PROVIDER = os.getenv("DEFAULT_LLM_PROVIDER", "openai")
+
+    # Model per provider
+    DEFAULT_LLM_MODEL = os.getenv("DEFAULT_LLM_MODEL", "")  # Auto-selected based on provider
     MAX_TOKENS = int(os.getenv("MAX_TOKENS", "4096"))
+
+    # Default models for each provider
+    DEFAULT_MODELS = {
+        "openai": "gpt-4o-mini",        # Cheapest, fast
+        "gemini": "gemini-1.5-flash",   # Very cheap, fast
+        "anthropic": "claude-3-haiku-20240307"  # Good quality, reasonable price
+    }
 
     # Directory Settings
     DATA_DIR = os.getenv("DATA_DIR", "data")
@@ -66,8 +78,9 @@ class Config:
         """
         errors = []
 
-        if not cls.ANTHROPIC_API_KEY:
-            errors.append("ANTHROPIC_API_KEY not set in environment")
+        # Check that at least one LLM API key is set
+        if not any([cls.ANTHROPIC_API_KEY, cls.OPENAI_API_KEY, cls.GEMINI_API_KEY]):
+            errors.append("No LLM API keys found. Set at least one: ANTHROPIC_API_KEY, OPENAI_API_KEY, or GEMINI_API_KEY")
 
         # Validate directories can be created
         for dir_name in [cls.DATA_DIR, cls.OUTPUT_DIR, cls.LOG_DIR]:
@@ -77,6 +90,23 @@ class Config:
                 errors.append(f"Cannot create directory {dir_name}: {e}")
 
         return errors
+
+    @classmethod
+    def get_available_providers(cls) -> List[str]:
+        """
+        Get list of available LLM providers based on configured API keys
+
+        Returns:
+            List of provider names that have API keys configured
+        """
+        providers = []
+        if cls.ANTHROPIC_API_KEY:
+            providers.append("anthropic")
+        if cls.OPENAI_API_KEY:
+            providers.append("openai")
+        if cls.GEMINI_API_KEY:
+            providers.append("gemini")
+        return providers
 
     @classmethod
     def get_sources_by_category(cls, category: str) -> Dict[str, str]:
@@ -113,12 +143,16 @@ class Config:
     def print_config(cls):
         """Print current configuration (for debugging)"""
         print("=== Configuration ===")
-        print(f"LLM Model: {cls.DEFAULT_LLM_MODEL}")
+        print(f"LLM Provider: {cls.DEFAULT_LLM_PROVIDER}")
+        print(f"LLM Model: {cls.DEFAULT_LLM_MODEL or 'Auto-selected'}")
         print(f"Max Tokens: {cls.MAX_TOKENS}")
         print(f"Data Directory: {cls.DATA_DIR}")
         print(f"Output Directory: {cls.OUTPUT_DIR}")
         print(f"Log Directory: {cls.LOG_DIR}")
         print(f"Max Articles/Source: {cls.MAX_ARTICLES_PER_SOURCE}")
-        print(f"Anthropic API Key: {'Set' if cls.ANTHROPIC_API_KEY else 'NOT SET'}")
-        print(f"OpenAI API Key: {'Set' if cls.OPENAI_API_KEY else 'NOT SET'}")
+        print(f"\nAPI Keys:")
+        print(f"  Anthropic: {'Set' if cls.ANTHROPIC_API_KEY else 'NOT SET'}")
+        print(f"  OpenAI:    {'Set' if cls.OPENAI_API_KEY else 'NOT SET'}")
+        print(f"  Gemini:    {'Set' if cls.GEMINI_API_KEY else 'NOT SET'}")
+        print(f"\nAvailable Providers: {', '.join(cls.get_available_providers())}")
         print("=====================")

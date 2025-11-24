@@ -1,5 +1,7 @@
 # Core Dependencies
 anthropic>=0.18.0           # Claude API
+openai>=1.0.0               # OpenAI GPT API
+google-generativeai>=0.3.0  # Google Gemini API
 feedparser>=6.0.10          # RSS feed parsing
 python-dotenv>=1.0.0        # Environment variable management
 
@@ -8,7 +10,6 @@ typer>=0.9.0                # CLI framework
 rich>=13.0.0                # Rich terminal formatting
 
 # Future dependencies (commented out for now)
-# openai>=1.0.0             # OpenAI API (for Sprint 5+)
 # playwright>=1.40.0        # Web scraping (for Sprint 4+)
 # beautifulsoup4>=4.12.0    # HTML parsing (for Sprint 4+)
 # requests>=2.31.0          # HTTP requests (for Sprint 4+)

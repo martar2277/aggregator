@@ -2,12 +2,13 @@
 
 A multi-source news aggregation and synthesis system using LLMs for intelligent analysis. Collects articles from RSS feeds and generates comprehensive, balanced summaries that identify common themes, unique perspectives, sentiment, and potential biases across different sources.
 
-## Features (Sprint 1)
+## Features (Sprint 1+)
 
 - **Multi-source RSS Fetching**: Collect articles from multiple RSS feeds
-- **LLM-powered Analysis**: Uses Claude (Anthropic) for intelligent synthesis
+- **Multi-LLM Support**: Choose between OpenAI GPT, Google Gemini, or Anthropic Claude
+- **Automatic Fallback**: If one LLM is unavailable, automatically falls back to another
 - **Robust Error Handling**: Graceful handling of failed sources and API errors
-- **Cost Tracking**: Monitor LLM API costs and token usage
+- **Cost Tracking**: Monitor LLM API costs and token usage across all providers
 - **Comprehensive Logging**: Track all operations with detailed metrics
 - **JSON Storage**: Save analyses and raw articles for later retrieval
 - **Markdown Output**: Generate readable reports
@@ -39,18 +40,23 @@ news-aggregator/
 ### Prerequisites
 
 - Python 3.8 or higher
-- Anthropic API key (get one at https://console.anthropic.com/)
+- **At least one LLM API key**:
+  - OpenAI API key (https://platform.openai.com/api-keys) - Recommended, works out of the box
+  - Google Gemini API key (https://makersuite.google.com/app/apikey) - Free tier available
+  - Anthropic Claude API key (https://console.anthropic.com/)
 
 ### Option 1: GitHub Codespaces (Recommended)
 
 GitHub Codespaces provides a cloud development environment with zero setup:
 
-1. **Set up API key as GitHub Secret:**
+1. **Set up API keys as GitHub Secrets:**
    - Go to https://github.com/settings/codespaces
    - Under "Codespaces secrets", click **"New secret"**
-   - Name: `ANTHROPIC_API_KEY`
-   - Value: `sk-ant-api03-your-key-here`
-   - Repository access: Select your `aggregator` repository
+   - Add **at least one** of these secrets:
+     - `OPENAI_API_KEY` - Your OpenAI API key (recommended)
+     - `GEMINI_API_KEY` - Your Google Gemini API key
+     - `ANTHROPIC_API_KEY` - Your Anthropic Claude API key
+   - For each secret, set repository access to your `aggregator` repository
 
 2. **Create Codespace:**
    - Go to your repository on GitHub
@@ -100,9 +106,15 @@ If you prefer to run locally:
    # On Windows, you can use: copy .env.example .env
    ```
 
-   Edit `.env` and set your Anthropic API key:
+   Edit `.env` and set at least one API key:
    ```
-   ANTHROPIC_API_KEY=sk-ant-api03-your-actual-key-here
+   # Add at least one of these:
+   OPENAI_API_KEY=sk-your-openai-key-here
+   GEMINI_API_KEY=your-gemini-key-here
+   ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
+
+   # Optional: Specify which LLM provider to use (default: openai)
+   DEFAULT_LLM_PROVIDER=openai  # Options: openai, gemini, anthropic
    ```
 
 5. **Test the installation**:
@@ -201,8 +213,11 @@ python main.py config
 Edit `.env` to customize settings:
 
 ```bash
-# LLM Model (options: claude-3-haiku-20240307, claude-3-5-sonnet-20241022)
-DEFAULT_LLM_MODEL=claude-3-haiku-20240307
+# LLM Provider (options: openai, gemini, anthropic)
+DEFAULT_LLM_PROVIDER=openai
+
+# Optional: Specific model (auto-selected if not set)
+# DEFAULT_LLM_MODEL=gpt-4o-mini
 
 # Maximum tokens for LLM response
 MAX_TOKENS=4096
@@ -216,15 +231,31 @@ OUTPUT_DIR=outputs
 LOG_DIR=logs
 ```
 
+### Available Models by Provider:
+
+**OpenAI (Default)**
+- `gpt-4o-mini` - Fastest, cheapest ($0.15/1M input tokens)
+- `gpt-4o` - Better quality ($2.50/1M input tokens)
+
+**Google Gemini**
+- `gemini-1.5-flash` - Very fast and cheap ($0.075/1M input tokens)
+- `gemini-1.5-pro` - Better quality ($1.25/1M input tokens)
+
+**Anthropic Claude**
+- `claude-3-haiku-20240307` - Fast and affordable ($0.25/1M input tokens)
+- `claude-3-5-sonnet-20241022` - Best quality ($3/1M input tokens)
+
 ## Cost Estimates
 
-Using **Claude 3 Haiku** (cheapest option):
-- ~$0.01-0.05 per analysis (10 articles from 3 sources)
-- ~$1-5 per 100 analyses
+**Per analysis (10 articles from 3 sources):**
 
-Using **Claude 3.5 Sonnet** (better quality):
-- ~$0.10-0.30 per analysis
-- ~$10-30 per 100 analyses
+| Provider | Cheap Model | Cost/Analysis | Premium Model | Cost/Analysis |
+|----------|-------------|---------------|---------------|---------------|
+| **Gemini** | 1.5-flash | ~$0.005-0.01 | 1.5-pro | ~$0.08-0.15 |
+| **OpenAI** | gpt-4o-mini | ~$0.01-0.03 | gpt-4o | ~$0.15-0.30 |
+| **Claude** | Haiku | ~$0.02-0.05 | Sonnet | ~$0.20-0.40 |
+
+**Recommendation:** Start with **Gemini 1.5-flash** (cheapest) or **GPT-4o-mini** (best value).
 
 Check `logs/metrics_*.json` for actual costs.
 
@@ -258,10 +289,11 @@ The synthesis includes:
 
 ## Troubleshooting
 
-### "Configuration errors: ANTHROPIC_API_KEY not set"
-- Make sure you've created a `.env` file
-- Verify your API key is correctly set in `.env`
-- Check that `.env` is in the project root directory
+### "No LLM API keys found"
+- Make sure you've set at least one API key in `.env` or GitHub Secrets
+- Supported keys: `OPENAI_API_KEY`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`
+- In Codespaces, check https://github.com/settings/codespaces
+- Locally, verify `.env` file exists in project root
 
 ### "No articles fetched from any source"
 - Check your internet connection
@@ -318,4 +350,4 @@ For questions or issues, please open an issue on GitHub.
 
 ---
 
-**Built with**: Python, Anthropic Claude, Typer, Rich
+**Built with**: Python, OpenAI GPT / Google Gemini / Anthropic Claude, Typer, Rich

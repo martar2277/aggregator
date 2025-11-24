@@ -11,11 +11,13 @@ from rich.console import Console
 from rich.panel import Panel
 from rich import print as rprint
 
-from core.base import Pipeline
+from core.base import Pipeline, Processor
 from core.logger import Logger
-from core.errors import AggregatorError, ConfigError
+from core.errors import AggregatorError, ConfigError, ProcessError
 from components.rss import RSSFetcher
 from components.llm import ClaudeLLMProcessor
+from components.openai_llm import OpenAIProcessor
+from components.gemini_llm import GeminiProcessor
 from components.storage import JSONStorage
 from components.output import MarkdownOutput
 from config import Config
@@ -24,12 +26,52 @@ app = typer.Typer(help="News Aggregator - Multi-source news analysis with LLM")
 console = Console()
 
 
-def create_pipeline(logger: Optional[Logger] = None) -> Pipeline:
+def get_llm_processor(provider: str, logger: Logger) -> Processor:
+    """
+    Get LLM processor based on provider with fallback logic
+
+    Args:
+        provider: LLM provider name ("openai", "gemini", "anthropic")
+        logger: Logger instance
+
+    Returns:
+        Configured processor
+
+    Raises:
+        ConfigError: If provider is not available
+    """
+    # Get model name
+    model = Config.DEFAULT_LLM_MODEL or Config.DEFAULT_MODELS.get(provider, "")
+
+    processors_map = {
+        "openai": (OpenAIProcessor, Config.OPENAI_API_KEY),
+        "gemini": (GeminiProcessor, Config.GEMINI_API_KEY),
+        "anthropic": (ClaudeLLMProcessor, Config.ANTHROPIC_API_KEY)
+    }
+
+    if provider not in processors_map:
+        raise ConfigError("LLM_PROVIDER", f"Unknown provider: {provider}")
+
+    processor_class, api_key = processors_map[provider]
+    if not api_key:
+        raise ConfigError(f"{provider.upper()}_API_KEY",
+                         f"{provider.capitalize()} API key not found")
+
+    # Auto-select model if not specified
+    if not model:
+        model = Config.DEFAULT_MODELS.get(provider)
+
+    return processor_class(model=model, logger=logger)
+
+
+def create_pipeline(logger: Optional[Logger] = None, provider: Optional[str] = None) -> Pipeline:
     """
     Create and configure the pipeline with all components
+    Uses multi-LLM fallback logic
 
     Args:
         logger: Optional logger instance
+        provider: Optional LLM provider override
 
     Returns:
         Configured Pipeline
@@ -37,9 +79,42 @@ def create_pipeline(logger: Optional[Logger] = None) -> Pipeline:
     if not logger:
         logger = Logger()
 
+    # Determine which LLM provider to use
+    if not provider:
+        provider = Config.DEFAULT_LLM_PROVIDER
+
+    # Get available providers for fallback
+    available_providers = Config.get_available_providers()
+
+    if not available_providers:
+        raise ConfigError("API_KEYS", "No LLM API keys configured")
+
+    # Try to use specified provider, fallback to first available
+    if provider not in available_providers:
+        logger.log_info(f"Provider '{provider}' not available, using '{available_providers[0]}'")
+        provider = available_providers[0]
+
+    logger.log_info(f"Using LLM provider: {provider}")
+
+    # Create processor
+    try:
+        processor = get_llm_processor(provider, logger)
+    except ConfigError as e:
+        # Try fallback to any available provider
+        for fallback_provider in available_providers:
+            if fallback_provider != provider:
+                logger.log_info(f"Falling back to provider: {fallback_provider}")
+                try:
+                    processor = get_llm_processor(fallback_provider, logger)
+                    break
+                except ConfigError:
+                    continue
+        else:
+            raise ConfigError("LLM_PROVIDER", "No working LLM provider found")
+
     pipeline = Pipeline(logger=logger)
     pipeline.set_fetcher(RSSFetcher(max_articles=Config.MAX_ARTICLES_PER_SOURCE, logger=logger)) \
-            .set_processor(ClaudeLLMProcessor(model=Config.DEFAULT_LLM_MODEL, logger=logger)) \
+            .set_processor(processor) \
             .set_storage(JSONStorage(storage_dir=Config.DATA_DIR, logger=logger)) \
             .set_output(MarkdownOutput(output_dir=Config.OUTPUT_DIR, logger=logger))
 
