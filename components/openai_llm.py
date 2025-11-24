@@ -47,6 +47,10 @@ class OpenAIProcessor(Processor):
 
         self.client = OpenAI(api_key=api_key)
 
+    def execute(self, data):
+        """Execute method required by Component base class"""
+        return self.process(data)
+
     def process(self, articles: List[Dict]) -> str:
         """
         Process articles and generate synthesis using OpenAI

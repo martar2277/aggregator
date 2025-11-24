@@ -43,6 +43,10 @@ class ClaudeLLMProcessor(Processor):
 
         self.client = Anthropic(api_key=api_key)
 
+    def execute(self, data):
+        """Execute method required by Component base class"""
+        return self.process(data)
+
     def process(self, articles: List[Dict]) -> str:
         """
         Process articles and generate synthesis using Claude

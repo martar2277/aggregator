@@ -49,6 +49,10 @@ class GeminiProcessor(Processor):
         genai.configure(api_key=api_key)
         self.client = genai.GenerativeModel(model)
 
+    def execute(self, data):
+        """Execute method required by Component base class"""
+        return self.process(data)
+
     def process(self, articles: List[Dict]) -> str:
         """
         Process articles and generate synthesis using Gemini
