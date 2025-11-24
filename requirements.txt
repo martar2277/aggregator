@@ -1,0 +1,17 @@
+# Core Dependencies
+anthropic>=0.18.0           # Claude API
+feedparser>=6.0.10          # RSS feed parsing
+python-dotenv>=1.0.0        # Environment variable management
+
+# CLI and UI
+typer>=0.9.0                # CLI framework
+rich>=13.0.0                # Rich terminal formatting
+
+# Future dependencies (commented out for now)
+# openai>=1.0.0             # OpenAI API (for Sprint 5+)
+# playwright>=1.40.0        # Web scraping (for Sprint 4+)
+# beautifulsoup4>=4.12.0    # HTML parsing (for Sprint 4+)
+# requests>=2.31.0          # HTTP requests (for Sprint 4+)
+# fastapi>=0.104.0          # Web API (for Sprint 8+)
+# uvicorn>=0.24.0           # ASGI server (for Sprint 8+)
+# sqlalchemy>=2.0.0         # Database ORM (for Sprint 3+)
