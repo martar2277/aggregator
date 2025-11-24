@@ -130,7 +130,7 @@ def analyze(
     topic: str = typer.Argument(..., help="Topic to analyze (e.g., 'AI regulation in EU')"),
     sources: Optional[List[str]] = typer.Option(None, "--source", "-s", help="RSS feed URLs"),
     category: Optional[str] = typer.Option(None, "--category", "-c",
-                                           help="Source category: default, international, tech, all"),
+                                           help="Source category: default, international, finance, tech, all"),
     no_storage: bool = typer.Option(False, "--no-storage", help="Skip saving to storage"),
     no_output: bool = typer.Option(False, "--no-output", help="Skip markdown output generation"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose logging"),
@@ -141,6 +141,7 @@ def analyze(
     Examples:
         python main.py analyze "AI policy in Estonia"
         python main.py analyze "Climate change" -c international
+        python main.py analyze "US stock market outlook" -c finance
         python main.py analyze "Tech startups" -s https://techcrunch.com/feed/
     """
     console.print(Panel.fit(
@@ -235,7 +236,7 @@ def analyze(
 @app.command()
 def list_sources(
     category: Optional[str] = typer.Option("all", "--category", "-c",
-                                           help="Category: default, international, tech, all")
+                                           help="Category: default, international, finance, tech, all")
 ):
     """
     List available RSS sources by category

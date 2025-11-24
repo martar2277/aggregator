@@ -54,7 +54,32 @@ class Config:
         "Delfi": "https://www.delfi.ee/rss",
     }
 
-    # International/EU Sources
+    # International Business/Finance Sources (Focus: Your Investment Portfolio)
+    FINANCE_SOURCES: Dict[str, str] = {
+        # European Markets & EU Affairs (affects Estonia + your European stocks)
+        "Financial Times": "https://www.ft.com/rss/home",
+        "Euronews": "https://www.euronews.com/rss",
+        "Deutsche Welle": "https://rss.dw.com/xml/rss-en-all",
+        "The Economist": "https://www.economist.com/rss",
+
+        # Global Markets & Finance
+        "Reuters Business": "https://www.reutersagency.com/feed/",
+        "Bloomberg": "https://feeds.bloomberg.com/markets/news.rss",
+
+        # US Markets (your US stocks)
+        "Wall Street Journal": "https://feeds.a.dj.com/rss/RSSMarketsMain.xml",
+        "CNBC": "https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=10000664",
+        "MarketWatch": "https://www.marketwatch.com/rss/topstories",
+
+        # Latin America (your Latin American stocks)
+        "Reuters Latin America": "https://www.reuters.com/places/latin-america",
+
+        # Asia-Pacific & Emerging Markets
+        "South China Morning Post": "https://www.scmp.com/rss/91/feed",
+        "Nikkei Asia": "https://asia.nikkei.com/rss/feed/nar",
+    }
+
+    # International/EU Sources (General news - can add geopolitical later)
     INTERNATIONAL_SOURCES: Dict[str, str] = {
         "BBC": "http://feeds.bbci.co.uk/news/rss.xml",
         "Reuters": "https://www.reutersagency.com/feed/",
@@ -114,7 +139,7 @@ class Config:
         Get sources by category
 
         Args:
-            category: One of 'default', 'international', 'tech', 'all'
+            category: One of 'default', 'international', 'finance', 'tech', 'all'
 
         Returns:
             Dictionary of source name -> URL
@@ -123,12 +148,15 @@ class Config:
             return cls.DEFAULT_SOURCES
         elif category == 'international':
             return cls.INTERNATIONAL_SOURCES
+        elif category == 'finance':
+            return cls.FINANCE_SOURCES
         elif category == 'tech':
             return cls.TECH_SOURCES
         elif category == 'all':
             all_sources = {}
             all_sources.update(cls.DEFAULT_SOURCES)
             all_sources.update(cls.INTERNATIONAL_SOURCES)
+            all_sources.update(cls.FINANCE_SOURCES)
             all_sources.update(cls.TECH_SOURCES)
             return all_sources
         else:
