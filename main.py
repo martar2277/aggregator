@@ -114,7 +114,10 @@ def create_pipeline(logger: Optional[Logger] = None, provider: Optional[str] = N
             raise ConfigError("LLM_PROVIDER", "No working LLM provider found")
 
     pipeline = Pipeline(logger=logger)
-    pipeline.set_fetcher(RSSFetcher(max_articles=Config.MAX_ARTICLES_PER_SOURCE, topic_filter=topic, logger=logger)) \
+    pipeline.set_fetcher(RSSFetcher(max_articles=Config.MAX_ARTICLES_PER_SOURCE,
+                                    topic_filter=topic,
+                                    llm_processor=processor,
+                                    logger=logger)) \
             .set_processor(processor) \
             .set_storage(JSONStorage(storage_dir=Config.DATA_DIR, logger=logger)) \
             .set_output(MarkdownOutput(output_dir=Config.OUTPUT_DIR, logger=logger))
